@@ -511,6 +511,49 @@ bool SceneTree::process(double p_time) {
 	return _quit;
 }
 
+/*
+void SceneTree::new_process_timers(double p_delta, bool p_physics_frame) {
+ list will be sorted so the first one is the closest one to end
+	List<Ref<SceneTreeTimer>>::Element *L = timers.back(); //last element
+	List<Ref<SceneTreeTimer>>::Element *F; //first element
+	List<Ref<SceneTreeTimer>>::Element *S; //second element
+
+for (List<Ref<SceneTreeTimer>>::Element *E = timers.front(); E;) {
+	List<Ref<SceneTreeTimer>>::Element *N = E->next();
+	if ((paused && !E->get()->is_process_always()) || (E->get()->is_process_in_physics() != p_physics_frame)) {
+		if (E == L) {
+			break; //break on last, so if new timers were added during list traversal, ignore them.
+		}
+		E = N;
+		continue;
+	}
+	if (!F){//if first one is null
+		F = E;
+	}
+	else{// if second one is null
+		S = E;
+		break;
+	}
+}
+double time_left = F->get()->get_time_left();
+if (F->get()->is_ignore_time_scale()) {
+	time_left -= Engine::get_singleton()->get_process_step();
+} else {
+	time_left -= p_delta;
+}
+F->get()->set_time_left(time_left);
+if (time_left <= 0) {
+	F->get()->emit_signal(SNAME("timeout"));
+	if(S){
+		time_left = S->get()->get_time_left();
+		time_left += F->get()->get_time_left();
+		S->get()->set_time_left(time_left);
+	}
+	timers.erase(E);
+}
+}
+*/
+
 void SceneTree::process_timers(double p_delta, bool p_physics_frame) {
 	List<Ref<SceneTreeTimer>>::Element *L = timers.back(); //last element
 
@@ -1157,6 +1200,47 @@ void SceneTree::add_current_scene(Node *p_current) {
 	current_scene = p_current;
 	root->add_child(p_current);
 }
+
+
+/*
+Ref<SceneTreeTimer> SceneTree::new_create_timer(double p_delay_sec, bool p_process_always, bool p_process_in_physics, bool p_ignore_time_scale) {
+	Ref<SceneTreeTimer> stt;
+	stt.instantiate();
+	stt->set_process_always(p_process_always);
+	stt->set_time_left(p_delay_sec);
+	stt->set_process_in_physics(p_process_in_physics);
+	stt->set_ignore_time_scale(p_ignore_time_scale);
+
+double cumulative_time = 0.0;
+bool timer_added = false;
+List<Ref<SceneTreeTimer>>::Element *L = timers.back(); //last element
+for (List<Ref<SceneTreeTimer>>::Element *E = timers.front(); E;) {
+	List<Ref<SceneTreeTimer>>::Element *N = E->next();
+	if ((paused && !E->get()->is_process_always()) || (E->get()->is_process_in_physics() != p_physics_frame)) {
+		if (E == L) {
+			break; //break on last, so if new timers were added during list traversal, ignore them.
+		}
+		E = N;
+		continue;
+	}
+	if(p_delay_sec > cumulative_time){
+		cumulative_time += E->get()->get_time_left();
+	}
+	else if(!timer_added){
+		stt->set_time_left(cumulative_time-p_delay_sec);
+		timers.insert_after(E, stt);
+		timer_added = true;
+	}
+	else{
+		double time_left = E->get()->get_time_left();
+		time_left -= cumulative_time-p_delay_sec
+											   E->get()->set_time_left(time_left);
+		break;
+	}
+}
+return stt;
+}
+*/
 
 Ref<SceneTreeTimer> SceneTree::create_timer(double p_delay_sec, bool p_process_always, bool p_process_in_physics, bool p_ignore_time_scale) {
 	Ref<SceneTreeTimer> stt;
